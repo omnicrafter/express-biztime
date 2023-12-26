@@ -1,4 +1,5 @@
 const express = require("express");
+const ExpressError = require("../expressError");
 const router = express.Router();
 const db = require("../db");
 
@@ -13,6 +14,9 @@ router.get("/", async (req, res, next) => {
       result = await db.query(`SELECT * FROM companies WHERE code=$1`, [code]);
     } else {
       result = await db.query(`SELECT * FROM companies`);
+    }
+    if (result.rows.length === 0) {
+      throw new ExpressError("Company not found", 404);
     }
     return res.json({ companies: result.rows });
   } catch (e) {
@@ -43,7 +47,7 @@ router.patch("/:code", async (req, res, next) => {
         RETURNING code, name, description`,
       [name, description, code]
     );
-    return res.json(result.rows[0]);
+    return res.json({ company: result.rows[0] });
   } catch (e) {
     return next(e);
   }
@@ -57,6 +61,10 @@ router.delete("/:code", async (req, res, next) => {
         DELETE FROM companies WHERE code = $1`,
       [code]
     );
+
+    if (result.rowCount === 0) {
+      throw new ExpressError("Company not found", 404);
+    }
     return res.json({ status: "deleted" });
   } catch (e) {
     return next(e);
