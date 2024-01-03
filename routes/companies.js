@@ -12,9 +12,27 @@ router.get("/", async (req, res, next) => {
     const { code } = req.query;
     let result;
     if (code) {
-      result = await db.query(`SELECT * FROM companies WHERE code=$1`, [code]);
+      result = await db.query(
+        `
+      SELECT c.code, c.name, c.description, array_agg(I.industry) as industries
+      FROM companies as c
+      LEFT JOIN companies_industries AS ci
+      ON c.code = ci.comp_code
+      LEFT JOIN industries AS I
+      ON ci.ind_code = I.code
+      WHERE c.code = $1 
+      GROUP BY c.code, c.name, c.description`,
+        [code]
+      );
     } else {
-      result = await db.query(`SELECT * FROM companies`);
+      result = await db.query(`
+      SELECT c.code, c.name, c.description, array_agg(I.industry) as industries
+      FROM companies as c
+      LEFT JOIN companies_industries AS ci
+      ON c.code = ci.comp_code
+      LEFT JOIN industries AS I
+      ON ci.ind_code = I.code
+      GROUP BY c.code, c.name, c.description`);
     }
     if (result.rows.length === 0) {
       throw new ExpressError("Company not found", 404);
