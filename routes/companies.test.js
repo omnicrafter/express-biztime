@@ -7,6 +7,10 @@ const db = require("../db");
 
 let testCompany;
 
+beforeAll(async () => {
+  await db.query("DELETE FROM companies");
+});
+
 beforeEach(async () => {
   const result = await db.query(
     `INSERT INTO companies (code, name, description) VALUES ('cstco', 'Costco', 'Kirkland Signature') 
@@ -56,10 +60,14 @@ describe("POST /companies", () => {
   test("Creates a new company", async () => {
     const response = await request(app)
       .post(`/companies`)
-      .send({ code: "msft", name: "Microsoft", description: "Tech company" });
+      .send({ name: "Microsoft", description: "Tech company" });
     expect(response.statusCode).toEqual(201);
     expect(response.body).toEqual({
-      company: { code: "msft", name: "Microsoft", description: "Tech company" },
+      company: {
+        code: "microsoft",
+        name: "Microsoft",
+        description: "Tech company",
+      },
     });
   });
 });
