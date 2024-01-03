@@ -57,6 +57,30 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+router.post("/:code/add-industry", async (req, res, next) => {
+  try {
+    const { code } = req.params;
+    const { industry } = req.body;
+    const checkDuplicate = await db.query(
+      `SELECT * FROM companies_industries WHERE comp_code = $1 AND ind_code = $2`,
+      [code, industry]
+    );
+    if (checkDuplicate.rows.length > 0) {
+      return res.status(400).json({ error: "Industry already exists" });
+    }
+    const result = await db.query(
+      `INSERT INTO companies_industries (comp_code, ind_code) VALUES ($1, $2) RETURNING comp_code, ind_code`,
+      [code, industry]
+    );
+    if (result.rows.length === 0) {
+      throw new ExpressError("Company not found", 404);
+    }
+    return res.status(201).json({ association: result.rows[0] });
+  } catch (e) {
+    return next(e);
+  }
+});
+
 router.patch("/:code", async (req, res, next) => {
   try {
     const { code } = req.params;
