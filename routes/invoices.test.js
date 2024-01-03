@@ -66,9 +66,19 @@ describe("PUT /invoices/:id", () => {
   test("Updates an invoice", async () => {
     const response = await request(app)
       .put(`/invoices/${testInvoice.id}`)
-      .send({ amt: 200 });
-    expect(response.statusCode).toBe(200);
-    expect(response.body.invoice.amt).toBe(200);
+      .send({ amt: 200, paid: true });
+
+    expect(response.statusCode).toEqual(200);
+    expect(response.body).toEqual({
+      invoice: {
+        id: testInvoice.id,
+        comp_code: "test",
+        amt: 200,
+        paid: true,
+        add_date: expect.any(String),
+        paid_date: expect.any(String),
+      },
+    });
   });
 
   test("Responds with 404 for invalid invoice id", async () => {
